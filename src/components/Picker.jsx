@@ -164,7 +164,7 @@ export default function Picker({ goals, onGoalsChange }) {
   }
 
   return (
-    <div style={{ maxWidth: 520, margin: '0 auto', padding: '32px 24px 80px' }}>
+    <div style={{ maxWidth: 520, margin: '0 auto', padding: '32px 24px 96px' }}>
 
       {/* ── Section header ── */}
       <div style={{ marginBottom: 24 }}>

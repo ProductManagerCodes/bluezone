@@ -169,8 +169,8 @@ export default function App() {
         {tab === 'friends' && <Friends goals={goals} userId={userId} userName={user} />}
       </main>
 
-      {/* ── Tab nav (fixed bottom) ── */}
-      <nav
+      {/* ── Bottom chrome: footer + tab nav ── */}
+      <div
         style={{
           position: 'fixed',
           bottom: 0,
@@ -178,42 +178,81 @@ export default function App() {
           right: 0,
           zIndex: 20,
           background: CREAM,
-          borderTop: `2px solid ${INK}`,
         }}
       >
-        <div
-          style={{
-            maxWidth: 520,
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr 1fr',
-          }}
-        >
-          {TABS.map(({ id, label }, i) => {
-            const active = tab === id
-            return (
-              <button
-                key={id}
-                onClick={() => setTab(id)}
-                style={{
-                  border: 'none',
-                  borderRight: i < TABS.length - 1 ? `2px solid ${INK}` : 'none',
-                  background: active ? INK : CREAM,
-                  color: active ? CREAM : INK,
-                  fontFamily: MONO,
-                  fontSize: '0.62rem',
-                  letterSpacing: '0.1em',
-                  padding: '17px 8px 16px',
-                  cursor: 'pointer',
-                  lineHeight: 1,
-                }}
-              >
-                {label}
-              </button>
-            )
-          })}
+        {/* Footer */}
+        <div style={{ borderTop: `2px solid ${INK}` }}>
+          <div
+            style={{
+              maxWidth: 520,
+              margin: '0 auto',
+              padding: '6px 24px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: MONO,
+                fontSize: '0.48rem',
+                letterSpacing: '0.1em',
+                color: INK,
+                opacity: 0.3,
+              }}
+            >
+              EMBER · HABIT JOURNAL
+            </span>
+            <span
+              style={{
+                fontFamily: MONO,
+                fontSize: '0.48rem',
+                letterSpacing: '0.1em',
+                color: INK,
+                opacity: 0.3,
+              }}
+            >
+              KEEP THE FIRE LIT
+            </span>
+          </div>
         </div>
-      </nav>
+
+        {/* Tab nav */}
+        <nav style={{ borderTop: `2px solid ${INK}` }}>
+          <div
+            style={{
+              maxWidth: 520,
+              margin: '0 auto',
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+            }}
+          >
+            {TABS.map(({ id, label }, i) => {
+              const active = tab === id
+              return (
+                <button
+                  key={id}
+                  onClick={() => setTab(id)}
+                  style={{
+                    border: 'none',
+                    borderRight: i < TABS.length - 1 ? `2px solid ${INK}` : 'none',
+                    background: active ? INK : CREAM,
+                    color: active ? CREAM : INK,
+                    fontFamily: MONO,
+                    fontSize: '0.62rem',
+                    letterSpacing: '0.1em',
+                    padding: '17px 8px 16px',
+                    cursor: 'pointer',
+                    lineHeight: 1,
+                  }}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </nav>
+      </div>
 
     </div>
   )

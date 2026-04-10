@@ -45,7 +45,7 @@ export default function NewChallenge({ goals, userId, userName, onBack }) {
   }
 
   return (
-    <div style={{ maxWidth: 520, margin: '0 auto', padding: '28px 24px 80px' }}>
+    <div style={{ maxWidth: 520, margin: '0 auto', padding: '28px 24px 96px' }}>
 
       {/* Back */}
       <button

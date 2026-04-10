@@ -307,7 +307,7 @@ export default function Today({ goals, onGoalPatch }) {
   return (
     <>
     <div style={{ background: CREAM }}>
-      <div style={{ maxWidth: 520, margin: '0 auto', padding: '28px 24px 80px' }}>
+      <div style={{ maxWidth: 520, margin: '0 auto', padding: '28px 24px 96px' }}>
 
         {/* ── Header ── */}
         <div style={{ marginBottom: 36 }}>

@@ -201,7 +201,7 @@ export default function Friends({ goals, userId, userName }) {
   }
 
   return (
-    <div style={{ maxWidth: 520, margin: '0 auto', padding: '32px 24px 80px' }}>
+    <div style={{ maxWidth: 520, margin: '0 auto', padding: '32px 24px 96px' }}>
 
       {/* ── Leaderboard ── */}
       <div style={{ marginBottom: 40 }}>

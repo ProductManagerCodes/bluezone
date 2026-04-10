@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent horizontal scroll on small screens */
+body {
+  overflow-x: hidden;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
