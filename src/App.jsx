@@ -1,8 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getItem, setItem } from './lib/storage.js'
+import { setItem as sharedSet } from './lib/sharedStorage.js'
+import { computeStreak } from './lib/streaks.js'
+import { todayKey } from './lib/dates.js'
 import Onboard from './components/Onboard.jsx'
 import Today from './components/Today.jsx'
 import Picker from './components/Picker.jsx'
+import Friends from './components/Friends.jsx'
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
 const CREAM = '#f3ede2'
@@ -21,59 +25,49 @@ function isOnboarded() {
   return Boolean(getItem('user') && getItem('goals')?.length)
 }
 
+function ensureUserId() {
+  let id = localStorage.getItem('userId')
+  if (!id) {
+    id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+    localStorage.setItem('userId', id)
+  }
+  return id
+}
+
 function formatDate() {
   const d = new Date()
   const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
   return `${months[d.getMonth()]} ${d.getDate()}`
 }
 
-// ── Friends placeholder ───────────────────────────────────────────────────────
-
-function Friends() {
-  return (
-    <div style={{ maxWidth: 520, margin: '0 auto', padding: '40px 24px 80px' }}>
-      <p style={{ fontFamily: MONO, fontSize: '0.68rem', color: HOT, letterSpacing: '0.12em', margin: '0 0 12px' }}>
-        COMING SOON
-      </p>
-      <h2
-        style={{
-          fontFamily: SERIF,
-          fontSize: '2.2rem',
-          fontStyle: 'italic',
-          fontWeight: 300,
-          color: INK,
-          margin: 0,
-          lineHeight: 1.1,
-        }}
-      >
-        Friends
-      </h2>
-      <p
-        style={{
-          fontFamily: MONO,
-          fontSize: '0.7rem',
-          color: INK,
-          opacity: 0.4,
-          marginTop: 20,
-          lineHeight: 1.6,
-          letterSpacing: '0.03em',
-          maxWidth: 280,
-        }}
-      >
-        Share streaks and keep each other accountable.
-      </p>
-    </div>
-  )
-}
-
 // ── App ───────────────────────────────────────────────────────────────────────
 
+function publishLeaderboard(goals, userId, userName) {
+  const today    = todayKey()
+  const histories = goals.map(g => getItem(`history_${g.id}`) ?? {})
+  const totalStreak = goals.reduce((sum, g, i) => sum + computeStreak(histories[i]), 0)
+  const todayDone   = goals.filter((g, i) => histories[i][today]?.done).length
+  sharedSet(`leaderboard:${userId}`, {
+    userId,
+    name:      userName,
+    totalStreak,
+    todayDone,
+    goalCount: goals.length,
+    updatedAt: new Date().toISOString(),
+  })
+}
+
 export default function App() {
-  const [ready, setReady] = useState(isOnboarded)
-  const [tab,   setTab]   = useState('today')
-  const [goals, setGoals] = useState(() => getItem('goals') ?? [])
+  const [ready,  setReady]  = useState(isOnboarded)
+  const [tab,    setTab]    = useState('today')
+  const [goals,  setGoals]  = useState(() => getItem('goals') ?? [])
+  const [userId] = useState(ensureUserId)
 
   const user = getItem('user') ?? ''
+
+  useEffect(() => {
+    if (ready) publishLeaderboard(goals, userId, user)
+  }, [goals, ready])
 
   // Called by Onboard when the user completes setup
   function handleOnboarded() {
@@ -172,7 +166,7 @@ export default function App() {
       <main>
         {tab === 'today'   && <Today   goals={goals} onGoalPatch={patchGoal}    />}
         {tab === 'goals'   && <Picker  goals={goals} onGoalsChange={updateGoals} />}
-        {tab === 'friends' && <Friends />}
+        {tab === 'friends' && <Friends goals={goals} userId={userId} userName={user} />}
       </main>
 
       {/* ── Tab nav (fixed bottom) ── */}
