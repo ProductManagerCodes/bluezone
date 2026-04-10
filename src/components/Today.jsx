@@ -3,6 +3,7 @@ import { Flame, Share2, X } from 'lucide-react'
 import { getItem, setItem } from '../lib/storage.js'
 import { computeStreak, suggestAdjustment } from '../lib/streaks.js'
 import { todayKey, daysBetween } from '../lib/dates.js'
+import ShareModal from './ShareModal.jsx'
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
 const CREAM = '#f3ede2'
@@ -72,7 +73,7 @@ function ProgressBar({ value, target }) {
 
 // ── GoalCard ──────────────────────────────────────────────────────────────────
 
-function GoalCard({ goal, todayValue, streak, index, shared, onMinus, onPlus, onDone, onShare }) {
+function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, onShare }) {
   const done      = todayValue >= goal.target
   const increment = Math.max(1, Math.round(goal.target / 4))
   const canMinus  = todayValue > 0
@@ -168,12 +169,11 @@ function GoalCard({ goal, todayValue, streak, index, shared, onMinus, onPlus, on
               fontFamily: MONO,
               fontSize: '0.63rem',
               letterSpacing: '0.09em',
-              color: shared ? INK : HOT,
-              opacity: shared ? 0.5 : 1,
+              color: HOT,
               cursor: 'pointer',
             }}
           >
-            {shared ? 'COPIED!' : <><Share2 size={11} /> SHARE {streak}-DAY STREAK</>}
+            <Share2 size={11} /> SHARE {streak}-DAY STREAK
           </button>
         </div>
       )}
@@ -264,8 +264,8 @@ export default function Today({ goals, onGoalPatch }) {
     )
   )
 
-  // goalId → true while "Copied!" flash is active
-  const [sharedIds, setSharedIds] = useState({})
+  // null | { goal, streak } — controls the share modal
+  const [shareModal, setShareModal] = useState(null)
 
   // ── Data helpers ─────────────────────────────────────────────────────────────
 
@@ -296,17 +296,6 @@ export default function Today({ goals, onGoalPatch }) {
     onGoalPatch(goalId, { adjustDismissed: today })
   }
 
-  async function handleShare(goal, streak) {
-    const text = `🔥 ${streak}-day streak on "${goal.title}" — tracked with Ember`
-    try {
-      if (navigator.share) await navigator.share({ text })
-      else await navigator.clipboard.writeText(text)
-    } catch {
-      // user cancelled or clipboard unavailable — fail silently
-    }
-    setSharedIds(prev => ({ ...prev, [goal.id]: true }))
-    setTimeout(() => setSharedIds(prev => ({ ...prev, [goal.id]: false })), 2000)
-  }
 
   // ── Derived ──────────────────────────────────────────────────────────────────
 
@@ -316,6 +305,7 @@ export default function Today({ goals, onGoalPatch }) {
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
+    <>
     <div style={{ background: CREAM }}>
       <div style={{ maxWidth: 520, margin: '0 auto', padding: '28px 24px 80px' }}>
 
@@ -387,11 +377,10 @@ export default function Today({ goals, onGoalPatch }) {
                     todayValue={todayVal}
                     streak={streak}
                     index={index}
-                    shared={!!sharedIds[goal.id]}
                     onMinus={inc => updateProgress(goal.id, todayVal - inc)}
                     onPlus={inc  => updateProgress(goal.id, todayVal + inc)}
                     onDone={() => updateProgress(goal.id, goal.target)}
-                    onShare={() => handleShare(goal, streak)}
+                    onShare={() => setShareModal({ goal, streak })}
                   />
                   {showNudge && (
                     <NudgeBanner
@@ -409,5 +398,15 @@ export default function Today({ goals, onGoalPatch }) {
 
       </div>
     </div>
+
+    {shareModal && (
+      <ShareModal
+        goal={shareModal.goal}
+        streak={shareModal.streak}
+        user={user}
+        onClose={() => setShareModal(null)}
+      />
+    )}
+    </>
   )
 }
