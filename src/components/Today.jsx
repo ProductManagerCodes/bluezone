@@ -254,15 +254,13 @@ function NudgeBanner({ suggestion, goal, onAccept, onDismiss }) {
 
 // ── Today ─────────────────────────────────────────────────────────────────────
 
-export default function Today() {
+export default function Today({ goals, onGoalPatch }) {
   const user  = getItem('user') ?? ''
   const today = todayKey()
 
-  const [goals, setGoals] = useState(() => getItem('goals') ?? [])
-
   const [histories, setHistories] = useState(() =>
     Object.fromEntries(
-      (getItem('goals') ?? []).map(g => [g.id, getItem(`history_${g.id}`) ?? {}])
+      goals.map(g => [g.id, getItem(`history_${g.id}`) ?? {}])
     )
   )
 
@@ -288,22 +286,14 @@ export default function Today() {
   }
 
   function acceptAdjustment(goalId, newTarget) {
-    // Also re-stamp today's history entry against the new target
+    // Re-stamp today's history entry against the new target, then lift the patch
     const current = getTodayValue(goalId)
-    const updated = goals.map(g =>
-      g.id === goalId ? { ...g, target: newTarget, adjustDismissed: null } : g
-    )
-    setGoals(updated)
-    setItem('goals', updated)
     persistProgress(goalId, current, newTarget)
+    onGoalPatch(goalId, { target: newTarget, adjustDismissed: null })
   }
 
   function dismissAdjustment(goalId) {
-    const updated = goals.map(g =>
-      g.id === goalId ? { ...g, adjustDismissed: today } : g
-    )
-    setGoals(updated)
-    setItem('goals', updated)
+    onGoalPatch(goalId, { adjustDismissed: today })
   }
 
   async function handleShare(goal, streak) {
@@ -326,23 +316,11 @@ export default function Today() {
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ minHeight: '100vh', background: CREAM }}>
-      <div style={{ maxWidth: 520, margin: '0 auto', padding: '40px 24px 120px' }}>
+    <div style={{ background: CREAM }}>
+      <div style={{ maxWidth: 520, margin: '0 auto', padding: '28px 24px 80px' }}>
 
         {/* ── Header ── */}
-        <div style={{ marginBottom: 44 }}>
-          <p
-            style={{
-              fontFamily: MONO,
-              fontSize: '0.67rem',
-              color: HOT,
-              letterSpacing: '0.12em',
-              margin: '0 0 10px',
-            }}
-          >
-            EMBER
-          </p>
-
+        <div style={{ marginBottom: 36 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <h1
               style={{
