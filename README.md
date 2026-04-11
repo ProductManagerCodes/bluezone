@@ -1,4 +1,4 @@
-# Ember — Habit Journal
+# RegularMonk — Habit Journal
 
 A minimal daily habit tracker with streak tracking, social sharing, and group challenges. Built with an editorial/brutalist aesthetic: cream paper, ink-black borders, one hot-orange accent.
 

@@ -131,7 +131,7 @@ export default function App() {
               letterSpacing: '-0.01em',
             }}
           >
-            Ember
+            RegularMonk
           </span>
 
           {/* Date + user */}
@@ -201,7 +201,7 @@ export default function App() {
                 opacity: 0.3,
               }}
             >
-              EMBER · HABIT JOURNAL
+              REGULARMONK · HABIT JOURNAL
             </span>
             <span
               style={{

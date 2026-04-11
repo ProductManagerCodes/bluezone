@@ -348,7 +348,7 @@ function GoalsPhase({ goals, selectedGoalIds, onToggle, onBack, onComplete }) {
       </div>
 
       <PrimaryBtn disabled={count === 0} onClick={onComplete}>
-        START EMBER →
+        START REGULARMONK →
       </PrimaryBtn>
     </>
   )
@@ -407,7 +407,7 @@ export default function Onboard({ onComplete }) {
           marginBottom: 52,
           letterSpacing: '0.02em',
         }}>
-          Ember
+          RegularMonk
         </div>
 
         {phase === 'name' && (

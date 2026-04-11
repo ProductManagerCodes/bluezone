@@ -33,7 +33,7 @@ function BragCard({ goal, streak }) {
           marginBottom: 20,
         }}
       >
-        Ember
+        RegularMonk
       </span>
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
@@ -135,7 +135,7 @@ export default function ShareModal({ goal, streak, user, onClose }) {
   const [status, setStatus] = useState('idle') // 'idle' | 'working' | 'done'
   const cardRef = useRef(null)
 
-  const bragCaption  = `🔥 ${streak}-day streak on "${goal.title}" — tracked with Ember`
+  const bragCaption  = `🔥 ${streak}-day streak on "${goal.title}" — tracked with RegularMonk`
   const shameCaption = `👀 ${user} needs help with "${goal.title}" — remind them today`
   const caption      = tone === 'brag' ? bragCaption : shameCaption
 
@@ -168,7 +168,7 @@ export default function ShareModal({ goal, streak, user, onClose }) {
           const url = URL.createObjectURL(blob)
           const a   = document.createElement('a')
           a.href     = url
-          a.download = `ember-${tone}-${goal.id}.png`
+          a.download = `monk-${tone}-${goal.id}.png`
           a.click()
           URL.revokeObjectURL(url)
           downloaded = true

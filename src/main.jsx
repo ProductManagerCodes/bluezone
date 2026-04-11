@@ -19,7 +19,7 @@ function GrainOverlay() {
         opacity: 0.045,
       }}
     >
-      <filter id="ember-grain">
+      <filter id="monk-grain">
         <feTurbulence
           type="fractalNoise"
           baseFrequency="0.72"
@@ -27,7 +27,7 @@ function GrainOverlay() {
           stitchTiles="stitch"
         />
       </filter>
-      <rect width="100%" height="100%" filter="url(#ember-grain)" />
+      <rect width="100%" height="100%" filter="url(#monk-grain)" />
     </svg>
   )
 }

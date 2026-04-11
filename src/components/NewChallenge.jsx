@@ -209,7 +209,7 @@ export default function NewChallenge({ goals, userId, userName, onBack }) {
           max={90}
           value={duration}
           onChange={e => setDuration(Number(e.target.value))}
-          className="ember-slider"
+          className="monk-slider"
         />
         <div
           style={{
