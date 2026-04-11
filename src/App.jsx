@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
-import { getItem, setItem } from './lib/storage.js'
+import { getItem, setItem, initUserStore, clearUserStore } from './lib/db.js'
 import { setItem as sharedSet } from './lib/sharedStorage.js'
+import { onAuthChange, logout, isAuthAvailable } from './lib/auth.js'
 import { computeStreak } from './lib/streaks.js'
 import { todayKey } from './lib/dates.js'
 import Onboard from './components/Onboard.jsx'
 import Today from './components/Today.jsx'
 import Picker from './components/Picker.jsx'
 import Friends from './components/Friends.jsx'
+import AuthScreen from './components/AuthScreen.jsx'
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
 const CREAM = '#f3ede2'
@@ -21,29 +23,14 @@ const TABS = [
   { id: 'friends', label: 'FRIENDS' },
 ]
 
-function isOnboarded() {
-  return Boolean(getItem('user') && getItem('goals')?.length)
-}
-
-function ensureUserId() {
-  let id = localStorage.getItem('userId')
-  if (!id) {
-    id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
-    localStorage.setItem('userId', id)
-  }
-  return id
-}
-
 function formatDate() {
   const d = new Date()
   const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
   return `${months[d.getMonth()]} ${d.getDate()}`
 }
 
-// ── App ───────────────────────────────────────────────────────────────────────
-
 function publishLeaderboard(goals, userId, userName) {
-  const today    = todayKey()
+  const today     = todayKey()
   const histories = goals.map(g => getItem(`history_${g.id}`) ?? {})
   const totalStreak = goals.reduce((sum, g, i) => sum + computeStreak(histories[i]), 0)
   const todayDone   = goals.filter((g, i) => histories[i][today]?.done).length
@@ -57,29 +44,45 @@ function publishLeaderboard(goals, userId, userName) {
   })
 }
 
+// ── App ───────────────────────────────────────────────────────────────────────
+
 export default function App() {
-  const [ready,  setReady]  = useState(isOnboarded)
-  const [tab,    setTab]    = useState('today')
-  const [goals,  setGoals]  = useState(() => getItem('goals') ?? [])
-  const [userId] = useState(ensureUserId)
+  const [authReady, setAuthReady] = useState(false)
+  const [userId,    setUserId]    = useState(null)
+  const [ready,     setReady]     = useState(false)
+  const [tab,       setTab]       = useState('today')
+  const [goals,     setGoals]     = useState([])
+
+  // ── Auth listener ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    return onAuthChange(fbUser => {
+      if (fbUser) {
+        initUserStore(fbUser.uid)
+        setUserId(fbUser.uid)
+      } else {
+        clearUserStore()
+        setUserId(null)
+      }
+      const onboarded = Boolean(getItem('user') && getItem('goals')?.length)
+      if (onboarded) setGoals(getItem('goals') ?? [])
+      setReady(onboarded)
+      setAuthReady(true)
+    })
+  }, [])
 
   const user = getItem('user') ?? ''
 
+  // ── Leaderboard sync ──────────────────────────────────────────────────────
   useEffect(() => {
-    if (ready) publishLeaderboard(goals, userId, user)
+    if (ready) publishLeaderboard(goals, userId ?? 'anon', user)
   }, [goals, ready])
 
-  // Called by Onboard when the user completes setup
+  // ── Callbacks ─────────────────────────────────────────────────────────────
+
   function handleOnboarded() {
     setGoals(getItem('goals') ?? [])
     setReady(true)
   }
-
-  if (!ready) {
-    return <Onboard onComplete={handleOnboarded} />
-  }
-
-  // ── Goal state helpers ────────────────────────────────────────────────────
 
   function patchGoal(goalId, patch) {
     setGoals(prev => {
@@ -94,7 +97,24 @@ export default function App() {
     setItem('goals', newGoals)
   }
 
+  async function handleSignOut() {
+    await logout()
+    // onAuthChange fires automatically after logout and resets all state
+  }
+
   // ── Render ────────────────────────────────────────────────────────────────
+
+  if (!authReady) {
+    return <div style={{ minHeight: '100vh', background: CREAM }} />
+  }
+
+  if (isAuthAvailable() && !userId) {
+    return <AuthScreen />
+  }
+
+  if (!ready) {
+    return <Onboard onComplete={handleOnboarded} />
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: CREAM }}>
@@ -134,7 +154,7 @@ export default function App() {
             RegularMonk
           </span>
 
-          {/* Date + user */}
+          {/* Date + user + optional sign-out */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <span
               style={{
@@ -158,6 +178,24 @@ export default function App() {
             >
               {user.toUpperCase()}
             </span>
+            {isAuthAvailable() && (
+              <button
+                onClick={handleSignOut}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontFamily: MONO,
+                  fontSize: '0.55rem',
+                  letterSpacing: '0.1em',
+                  color: INK,
+                  opacity: 0.4,
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                EXIT
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -166,7 +204,7 @@ export default function App() {
       <main>
         {tab === 'today'   && <Today   goals={goals} onGoalPatch={patchGoal}    />}
         {tab === 'goals'   && <Picker  goals={goals} onGoalsChange={updateGoals} />}
-        {tab === 'friends' && <Friends goals={goals} userId={userId} userName={user} />}
+        {tab === 'friends' && <Friends goals={goals} userId={userId ?? 'anon'} userName={user} />}
       </main>
 
       {/* ── Bottom chrome: footer + tab nav ── */}

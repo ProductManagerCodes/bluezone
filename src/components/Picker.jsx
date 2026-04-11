@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { THEMES } from '../data/themes.js'
-import { getItem } from '../lib/storage.js'
+import { getItem } from '../lib/db.js'
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
 const CREAM = '#f3ede2'

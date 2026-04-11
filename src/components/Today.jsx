@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Flame, Share2, X } from 'lucide-react'
-import { getItem, setItem } from '../lib/storage.js'
+import { getItem, setItem } from '../lib/db.js'
 import { computeStreak, suggestAdjustment } from '../lib/streaks.js'
 import { todayKey, daysBetween } from '../lib/dates.js'
 import ShareModal from './ShareModal.jsx'
@@ -73,7 +73,7 @@ function ProgressBar({ value, target }) {
 
 // ── GoalCard ──────────────────────────────────────────────────────────────────
 
-function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, onShare }) {
+function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, onUndo, onShare }) {
   const done      = todayValue >= goal.target
   const increment = Math.max(1, Math.round(goal.target / 4))
   const canMinus  = todayValue > 0
@@ -135,22 +135,62 @@ function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, on
       </div>
 
       {/* Controls */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {!done && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <button
+              onClick={() => canMinus && onMinus(increment)}
+              disabled={!canMinus}
+              style={{
+                border: `2px solid ${!canMinus ? '#bdb5ac' : INK}`,
+                boxShadow: !canMinus ? 'none' : `2px 2px 0 ${INK}`,
+                background: CREAM,
+                color: !canMinus ? '#bdb5ac' : INK,
+                fontFamily: MONO,
+                fontSize: '0.65rem',
+                letterSpacing: '0.04em',
+                padding: '9px 6px',
+                cursor: !canMinus ? 'not-allowed' : 'pointer',
+                lineHeight: 1,
+              }}
+            >
+              −{increment} {goal.unit.toUpperCase()}
+            </button>
+            <button
+              onClick={() => onPlus(increment)}
+              style={{
+                border: `2px solid ${INK}`,
+                boxShadow: `2px 2px 0 ${INK}`,
+                background: CREAM,
+                color: INK,
+                fontFamily: MONO,
+                fontSize: '0.65rem',
+                letterSpacing: '0.04em',
+                padding: '9px 6px',
+                cursor: 'pointer',
+                lineHeight: 1,
+              }}
+            >
+              +{increment} {goal.unit.toUpperCase()}
+            </button>
+          </div>
+        )}
         <button
-          onClick={() => canMinus && onMinus(increment)}
-          disabled={!canMinus}
-          style={{ ...controlBtnStyle(false, !canMinus), fontSize: '1.15rem' }}
+          onClick={done ? onUndo : onDone}
+          style={{
+            border: `2px solid ${INK}`,
+            boxShadow: done ? 'none' : `3px 3px 0 ${HOT}`,
+            background: done ? INK : HOT,
+            color: CREAM,
+            fontFamily: MONO,
+            fontSize: '0.75rem',
+            letterSpacing: '0.1em',
+            padding: '13px 8px',
+            cursor: 'pointer',
+            lineHeight: 1,
+          }}
         >
-          −
-        </button>
-        <button
-          onClick={() => onPlus(increment)}
-          style={{ ...controlBtnStyle(false, false), fontSize: '1.15rem' }}
-        >
-          +
-        </button>
-        <button onClick={onDone} style={controlBtnStyle(done, false)}>
-          {done ? '✓ DONE' : 'DONE'}
+          {done ? '✓ DONE — UNDO' : 'DONE FOR TODAY'}
         </button>
       </div>
 
@@ -358,11 +398,39 @@ export default function Today({ goals, onGoalPatch }) {
 
         {/* ── Goal cards ── */}
         {goals.length === 0 ? (
-          <p style={{ fontFamily: MONO, fontSize: '0.75rem', color: INK, opacity: 0.5 }}>
-            No habits yet.
-          </p>
+          <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <p style={{ fontSize: '2.5rem', margin: '0 0 16px' }}>🌱</p>
+            <p style={{ fontFamily: SERIF, fontSize: '1.2rem', fontWeight: 700, color: INK, margin: '0 0 8px' }}>
+              Nothing tracked yet.
+            </p>
+            <p style={{ fontFamily: MONO, fontSize: '0.65rem', color: INK, opacity: 0.45, letterSpacing: '0.08em', margin: 0 }}>
+              HEAD TO THE GOALS TAB TO ADD HABITS.
+            </p>
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {completedCount === total && total > 0 && (
+              <div style={{
+                border: `2px solid ${INK}`,
+                boxShadow: `4px 4px 0 ${INK}`,
+                background: HOT,
+                color: CREAM,
+                padding: '18px 22px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+              }}>
+                <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>🔥</span>
+                <div>
+                  <p style={{ fontFamily: MONO, fontSize: '0.62rem', letterSpacing: '0.12em', margin: '0 0 4px', opacity: 0.85 }}>
+                    ALL HABITS COMPLETE
+                  </p>
+                  <p style={{ fontFamily: SERIF, fontSize: '1.1rem', fontWeight: 700, margin: 0, lineHeight: 1.2 }}>
+                    You lit the day. Keep the fire.
+                  </p>
+                </div>
+              </div>
+            )}
             {goals.map((goal, index) => {
               const history    = histories[goal.id] ?? {}
               const todayVal   = getTodayValue(goal.id)
@@ -380,6 +448,7 @@ export default function Today({ goals, onGoalPatch }) {
                     onMinus={inc => updateProgress(goal.id, todayVal - inc)}
                     onPlus={inc  => updateProgress(goal.id, todayVal + inc)}
                     onDone={() => updateProgress(goal.id, goal.target)}
+                    onUndo={() => updateProgress(goal.id, 0)}
                     onShare={() => setShareModal({ goal, streak })}
                   />
                   {showNudge && (

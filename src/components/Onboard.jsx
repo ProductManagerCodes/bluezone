@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { THEMES, POPULAR } from '../data/themes.js'
-import { setItem } from '../lib/storage.js'
+import { setItem } from '../lib/db.js'
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
 const CREAM = '#f3ede2'
