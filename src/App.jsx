@@ -183,17 +183,16 @@ export default function App() {
                 onClick={handleSignOut}
                 style={{
                   background: 'none',
-                  border: 'none',
+                  border: `1px solid ${INK}`,
                   fontFamily: MONO,
                   fontSize: '0.55rem',
                   letterSpacing: '0.1em',
                   color: INK,
-                  opacity: 0.4,
                   cursor: 'pointer',
-                  padding: 0,
+                  padding: '4px 9px',
                 }}
               >
-                EXIT
+                SIGN OUT
               </button>
             )}
           </div>

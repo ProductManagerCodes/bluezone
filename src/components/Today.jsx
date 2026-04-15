@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Flame, Share2, X } from 'lucide-react'
 import { getItem, setItem } from '../lib/db.js'
+import { chat, llmEnabled } from '../lib/llm.js'
 import { computeStreak, suggestAdjustment } from '../lib/streaks.js'
 import { todayKey, daysBetween } from '../lib/dates.js'
 import ShareModal from './ShareModal.jsx'
@@ -79,6 +80,21 @@ function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, on
   const canMinus  = todayValue > 0
   const flameColor = streak > 0 ? HOT : '#b0a89e'
 
+  const [fact, setFact] = useState(null)
+  const factKey = `llm_fact_${goal.id}_${streak}`
+
+  useEffect(() => {
+    if (!llmEnabled || streak < 3) return
+    const cached = localStorage.getItem(factKey)
+    if (cached) { setFact(cached); return }
+    chat([{
+      role: 'user',
+      content: `One punchy habit-science stat about a ${streak}-day ${goal.title} streak. Max 18 words. Start with a % or number. No hashtags.`,
+    }], { maxTokens: 50 }).then(text => {
+      if (text) { localStorage.setItem(factKey, text); setFact(text) }
+    })
+  }, [streak])
+
   return (
     <div
       style={{
@@ -130,9 +146,25 @@ function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, on
       </div>
 
       {/* Progress bar */}
-      <div style={{ marginBottom: 18 }}>
+      <div style={{ marginBottom: streak >= 3 && llmEnabled && fact ? 10 : 18 }}>
         <ProgressBar value={todayValue} target={goal.target} />
       </div>
+
+      {/* AI streak fact */}
+      {streak >= 3 && llmEnabled && fact && (
+        <p style={{
+          fontFamily: MONO,
+          fontSize: '0.6rem',
+          color: INK,
+          opacity: 0.5,
+          fontStyle: 'italic',
+          margin: '0 0 14px',
+          lineHeight: 1.5,
+          letterSpacing: '0.02em',
+        }}>
+          {fact}
+        </p>
+      )}
 
       {/* Controls */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

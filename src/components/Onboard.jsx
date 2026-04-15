@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { THEMES, POPULAR } from '../data/themes.js'
 import { setItem } from '../lib/db.js'
+import { chat, llmEnabled } from '../lib/llm.js'
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
 const CREAM = '#f3ede2'
@@ -285,6 +286,30 @@ function GoalsPhase({ goals, selectedGoalIds, onToggle, onBack, onComplete }) {
   const count  = selectedGoalIds.length
   const atMax  = count >= 5
 
+  const [showAi,    setShowAi]    = useState(false)
+  const [aiPrompt,  setAiPrompt]  = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+
+  async function handleSuggest() {
+    if (!aiPrompt.trim()) return
+    setAiLoading(true)
+    const habitList = goals.map(g => `${g.id}: ${g.title}`).join(', ')
+    const text = await chat([{
+      role: 'user',
+      content: `Available habits: ${habitList}. User wants: "${aiPrompt.trim()}". Reply with exactly 3 habit IDs from the list (comma-separated, no spaces). Only IDs, nothing else.`,
+    }], { maxTokens: 30 })
+    if (text) {
+      text.split(',').map(s => s.trim()).forEach(id => {
+        if (goals.find(g => g.id === id) && !selectedGoalIds.includes(id) && selectedGoalIds.length < 5) {
+          onToggle(id)
+        }
+      })
+    }
+    setAiLoading(false)
+    setShowAi(false)
+    setAiPrompt('')
+  }
+
   const stepLabel = count === 0
     ? '— / YOUR HABITS'
     : `${String(count).padStart(2, '0')} / 05 SELECTED`
@@ -298,6 +323,67 @@ function GoalsPhase({ goals, selectedGoalIds, onToggle, onBack, onComplete }) {
         Pick up to<br />
         <Italic>5 habits.</Italic>
       </Heading>
+
+      {llmEnabled && (
+        <div style={{ marginBottom: 20 }}>
+          {!showAi ? (
+            <button
+              onClick={() => setShowAi(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                fontFamily: MONO,
+                fontSize: '0.65rem',
+                letterSpacing: '0.1em',
+                color: HOT,
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              ✦ SUGGEST HABITS FOR ME
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                autoFocus
+                value={aiPrompt}
+                onChange={e => setAiPrompt(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSuggest()}
+                placeholder="e.g. sleep better, stress less…"
+                style={{
+                  flex: 1,
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: `2px solid ${INK}`,
+                  fontFamily: SERIF,
+                  fontSize: '1rem',
+                  color: INK,
+                  padding: '4px 0',
+                  outline: 'none',
+                  caretColor: HOT,
+                }}
+              />
+              <button
+                onClick={handleSuggest}
+                disabled={aiLoading || !aiPrompt.trim()}
+                style={{
+                  background: INK,
+                  color: CREAM,
+                  border: 'none',
+                  fontFamily: MONO,
+                  fontSize: '0.6rem',
+                  letterSpacing: '0.1em',
+                  padding: '6px 12px',
+                  cursor: aiLoading ? 'wait' : 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                {aiLoading ? '...' : 'GO →'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {goals.map(goal => {
