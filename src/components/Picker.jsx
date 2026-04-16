@@ -22,7 +22,7 @@ function daysLogged(goalId) {
 
 // ── Current goal row ──────────────────────────────────────────────────────────
 
-function GoalRow({ goal, onRemove }) {
+function GoalRow({ goal, onRemove, onPatch }) {
   const days = daysLogged(goal.id)
   return (
     <div
@@ -63,6 +63,26 @@ function GoalRow({ goal, onRemove }) {
           {days} day{days !== 1 ? 's' : ''} logged
         </div>
       </div>
+
+      {/* Avoid toggle */}
+      <button
+        onClick={() => onPatch(goal.id, { avoid: !goal.avoid })}
+        title={goal.avoid ? 'Switch to positive habit' : 'Switch to avoid habit'}
+        style={{
+          background: goal.avoid ? INK : 'none',
+          border: `1px solid ${INK}`,
+          color: goal.avoid ? CREAM : INK,
+          fontFamily: MONO,
+          fontSize: '0.5rem',
+          letterSpacing: '0.08em',
+          padding: '3px 7px',
+          cursor: 'pointer',
+          flexShrink: 0,
+          opacity: goal.avoid ? 1 : 0.45,
+        }}
+      >
+        AVOID
+      </button>
 
       <button
         onClick={onRemove}
@@ -140,7 +160,7 @@ function PickerGoalRow({ goal, added, onAdd }) {
 
 // ── Picker ────────────────────────────────────────────────────────────────────
 
-export default function Picker({ goals, onGoalsChange }) {
+export default function Picker({ goals, onGoalsChange, onGoalPatch }) {
   const [addOpen, setAddOpen] = useState(false)
   const canAdd   = goals.length < 5
   const addedIds = new Set(goals.map(g => g.id))
@@ -208,7 +228,7 @@ export default function Picker({ goals, onGoalsChange }) {
                 borderBottom: i < goals.length - 1 ? `2px solid ${INK}` : 'none',
               }}
             >
-              <GoalRow goal={goal} onRemove={() => handleRemove(goal.id)} />
+              <GoalRow goal={goal} onRemove={() => handleRemove(goal.id)} onPatch={onGoalPatch} />
             </div>
           ))}
         </div>

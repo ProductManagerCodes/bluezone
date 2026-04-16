@@ -8,6 +8,18 @@ export function todayKey() {
 }
 
 /**
+ * offsetDay(dateStr, n)
+ *
+ * Returns the date n days from dateStr as "YYYY-MM-DD".
+ * n can be negative (past) or positive (future).
+ */
+export function offsetDay(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00')
+  d.setDate(d.getDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
  * daysBetween(a, b)
  *
  * Returns the integer number of days between two "YYYY-MM-DD" strings.

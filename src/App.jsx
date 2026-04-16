@@ -202,7 +202,7 @@ export default function App() {
       {/* ── Screen content ── */}
       <main>
         {tab === 'today'   && <Today   goals={goals} onGoalPatch={patchGoal}    />}
-        {tab === 'goals'   && <Picker  goals={goals} onGoalsChange={updateGoals} />}
+        {tab === 'goals'   && <Picker  goals={goals} onGoalsChange={updateGoals} onGoalPatch={patchGoal} />}
         {tab === 'friends' && <Friends goals={goals} userId={userId ?? 'anon'} userName={user} />}
       </main>
 

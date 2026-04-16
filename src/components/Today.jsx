@@ -3,7 +3,7 @@ import { Flame, Share2, X } from 'lucide-react'
 import { getItem, setItem } from '../lib/db.js'
 import { chat, llmEnabled } from '../lib/llm.js'
 import { computeStreak, suggestAdjustment } from '../lib/streaks.js'
-import { todayKey, daysBetween } from '../lib/dates.js'
+import { todayKey, daysBetween, offsetDay } from '../lib/dates.js'
 import ShareModal from './ShareModal.jsx'
 
 // ── Brand tokens ──────────────────────────────────────────────────────────────
@@ -132,9 +132,15 @@ function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, on
           marginBottom: 10,
         }}
       >
-        <span style={{ fontFamily: MONO, fontSize: '0.76rem', color: INK, letterSpacing: '0.02em' }}>
-          {todayValue} / {goal.target} {goal.unit}
-        </span>
+        {goal.avoid ? (
+          <span style={{ fontFamily: MONO, fontSize: '0.76rem', letterSpacing: '0.04em', color: done ? HOT : INK, opacity: done ? 1 : 0.45 }}>
+            {done ? 'AVOIDED TODAY' : 'NOT YET LOGGED'}
+          </span>
+        ) : (
+          <span style={{ fontFamily: MONO, fontSize: '0.76rem', color: INK, letterSpacing: '0.02em' }}>
+            {todayValue} / {goal.target} {goal.unit}
+          </span>
+        )}
 
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <Flame size={13} color={flameColor} fill={flameColor} />
@@ -145,10 +151,12 @@ function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, on
         </span>
       </div>
 
-      {/* Progress bar */}
-      <div style={{ marginBottom: streak >= 3 && llmEnabled && fact ? 10 : 18 }}>
-        <ProgressBar value={todayValue} target={goal.target} />
-      </div>
+      {/* Progress bar (positive habits only) */}
+      {!goal.avoid && (
+        <div style={{ marginBottom: streak >= 3 && llmEnabled && fact ? 10 : 18 }}>
+          <ProgressBar value={todayValue} target={goal.target} />
+        </div>
+      )}
 
       {/* AI streak fact */}
       {streak >= 3 && llmEnabled && fact && (
@@ -158,7 +166,7 @@ function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, on
           color: INK,
           opacity: 0.5,
           fontStyle: 'italic',
-          margin: '0 0 14px',
+          margin: goal.avoid ? '10px 0 14px' : '0 0 14px',
           lineHeight: 1.5,
           letterSpacing: '0.02em',
         }}>
@@ -168,7 +176,7 @@ function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, on
 
       {/* Controls */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {!done && (
+        {!goal.avoid && !done && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
             <button
               onClick={() => canMinus && onMinus(increment)}
@@ -222,7 +230,9 @@ function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, on
             lineHeight: 1,
           }}
         >
-          {done ? '✓ DONE — UNDO' : 'DONE FOR TODAY'}
+          {goal.avoid
+            ? (done ? '✓ KEPT — UNDO' : 'KEPT IT TODAY')
+            : (done ? '✓ DONE — UNDO' : 'DONE FOR TODAY')}
         </button>
       </div>
 
@@ -249,6 +259,83 @@ function GoalCard({ goal, todayValue, streak, index, onMinus, onPlus, onDone, on
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Shield helpers ────────────────────────────────────────────────────────────
+
+function shouldShowShield(history, goal, today) {
+  if (goal.shieldUsed) return false
+  const yesterday  = offsetDay(today, -1)
+  const twoDaysAgo = offsetDay(today, -2)
+  return !history[yesterday]?.done && !!history[twoDaysAgo]?.done
+}
+
+// ── ShieldBanner ──────────────────────────────────────────────────────────────
+
+const BLUE = '#4a7cf7'
+
+function ShieldBanner({ onUse, onDismiss }) {
+  return (
+    <div
+      style={{
+        border: `2px solid ${INK}`,
+        borderLeft: `4px solid ${BLUE}`,
+        borderTop: 'none',
+        background: CREAM,
+        padding: '11px 14px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+      }}
+    >
+      <span
+        style={{
+          flex: 1,
+          fontFamily: MONO,
+          fontSize: '0.67rem',
+          lineHeight: 1.55,
+          color: INK,
+          letterSpacing: '0.02em',
+        }}
+      >
+        🛡 You missed yesterday. Use your streak shield?
+      </span>
+      <button
+        onClick={onUse}
+        style={{
+          border: `2px solid ${BLUE}`,
+          boxShadow: `2px 2px 0 ${BLUE}`,
+          background: BLUE,
+          color: CREAM,
+          fontFamily: MONO,
+          fontSize: '0.65rem',
+          letterSpacing: '0.08em',
+          padding: '6px 12px',
+          cursor: 'pointer',
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        SHIELD
+      </button>
+      <button
+        onClick={onDismiss}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: INK,
+          opacity: 0.45,
+          cursor: 'pointer',
+          padding: '2px 4px',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <X size={14} />
+      </button>
     </div>
   )
 }
@@ -368,6 +455,18 @@ export default function Today({ goals, onGoalPatch }) {
     onGoalPatch(goalId, { adjustDismissed: today })
   }
 
+  function handleShield(goalId) {
+    const goal = goals.find(g => g.id === goalId)
+    const yesterday = offsetDay(today, -1)
+    const nextHist = {
+      ...histories[goalId],
+      [yesterday]: { value: goal.target, target: goal.target, done: true, shielded: true },
+    }
+    setHistories(prev => ({ ...prev, [goalId]: nextHist }))
+    setItem(`history_${goalId}`, nextHist)
+    onGoalPatch(goalId, { shieldUsed: today })
+  }
+
 
   // ── Derived ──────────────────────────────────────────────────────────────────
 
@@ -468,7 +567,8 @@ export default function Today({ goals, onGoalPatch }) {
               const todayVal   = getTodayValue(goal.id)
               const streak     = computeStreak(history)
               const suggestion = suggestAdjustment(goal, history)
-              const showNudge  = !!suggestion && shouldShowNudge(goal, today)
+              const showNudge  = !!suggestion && shouldShowNudge(goal, today) && !goal.avoid
+              const showShield = shouldShowShield(history, goal, today) && streak === 0
 
               return (
                 <div key={goal.id}>
@@ -483,6 +583,12 @@ export default function Today({ goals, onGoalPatch }) {
                     onUndo={() => updateProgress(goal.id, 0)}
                     onShare={() => setShareModal({ goal, streak })}
                   />
+                  {showShield && (
+                    <ShieldBanner
+                      onUse={() => handleShield(goal.id)}
+                      onDismiss={() => onGoalPatch(goal.id, { shieldUsed: today })}
+                    />
+                  )}
                   {showNudge && (
                     <NudgeBanner
                       suggestion={suggestion}
