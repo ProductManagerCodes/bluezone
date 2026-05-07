@@ -1,3 +1,26 @@
+/**
+ * Today.jsx — Daily habit tracking screen
+ *
+ * The main screen users interact with every day. Renders a GoalCard for each
+ * active habit with controls tailored to the habit type:
+ *
+ *   Positive habits  — incremental +/− steppers + full-width DONE button.
+ *                      Progress bar fills as the user logs toward their target.
+ *
+ *   Avoid habits     — binary KEPT IT / NOT YET LOGGED UI with no steppers,
+ *                      since the goal is resistance rather than accumulation.
+ *
+ * Additional features per card:
+ *  - Streak counter (consecutive completed days via computeStreak)
+ *  - AI streak fact (Groq/LLAMA, cached in localStorage, shown at ≥3 days)
+ *  - NudgeBanner — suggests raising/lowering the daily target after 7 days
+ *  - ShieldBanner — one-time offer to heal a streak broken by a single missed day
+ *  - Share button — opens ShareModal for streak cards at ≥3 days
+ *
+ * All persistence goes through db.js (user-scoped localStorage).
+ * History shape: { [YYYY-MM-DD]: { value, target, done, shielded? } }
+ */
+
 import { useState, useEffect } from 'react'
 import { Flame, Share2, X } from 'lucide-react'
 import { getItem, setItem } from '../lib/db.js'

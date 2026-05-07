@@ -1,3 +1,22 @@
+/**
+ * Picker.jsx — Goals management screen (GOALS tab)
+ *
+ * Displays the user's current habits (up to 5) and an expandable panel to
+ * browse the full theme library and add new ones.
+ *
+ * Features:
+ *  - Remove a habit with the × button (history is preserved in localStorage
+ *    so streaks survive a temporary removal and re-add).
+ *  - Toggle any habit between "positive" (track progress toward a target)
+ *    and "avoid" (track resistance — no progress bar, binary KEPT IT UI)
+ *    via the AVOID pill button on each row.
+ *  - Days-logged count is read live from localStorage so it stays accurate
+ *    after the Goals tab is opened.
+ *
+ * Writes goal changes via onGoalsChange (full replacement) and onGoalPatch
+ * (partial update to a single goal's fields, e.g. avoid toggle).
+ */
+
 import { useState } from 'react'
 import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { THEMES } from '../data/themes.js'

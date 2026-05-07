@@ -1,3 +1,22 @@
+/**
+ * NewChallenge.jsx — Challenge creation form (sub-screen of Friends tab)
+ *
+ * Mounted in place of the Friends list when the user taps "+ NEW".
+ * Three fields: challenge name, which habit, and duration (3–90 days).
+ *
+ * On submit, writes a challenge object to sharedStorage under the key
+ * `challenge:{id}` so it becomes visible to all users on the same browser.
+ * The creator is automatically added as the first participant.
+ *
+ * Challenge shape:
+ * {
+ *   id, title, goalId, goalTitle,
+ *   creatorId, creatorName,
+ *   duration, startDate, endDate, createdAt,
+ *   participants: [creatorId]
+ * }
+ */
+
 import { useState } from 'react'
 import { setItem } from '../lib/sharedStorage.js'
 import { todayKey } from '../lib/dates.js'

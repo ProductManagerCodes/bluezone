@@ -1,3 +1,22 @@
+/**
+ * ShareModal.jsx — Streak share card generator
+ *
+ * A modal overlay that lets users download a branded PNG share card for
+ * any habit with a streak ≥ 3 days. Two tones are available:
+ *
+ *   BRAG       — Hot-orange card with large streak number and habit name.
+ *                Caption: "🔥 {n}-day streak on '{habit}' — tracked with RegularMonk"
+ *
+ *   SELF-SHAME — Ink-black card calling out the user for slipping on a habit,
+ *                designed to be sent to friends as an accountability nudge.
+ *
+ * Image export uses html2canvas to rasterise the live DOM card node at 2×
+ * scale, then triggers a blob download. If canvas export fails (e.g. CORS on
+ * web fonts), it falls back to copying the caption text to the clipboard.
+ *
+ * The modal locks body scroll while open and closes on Escape or backdrop click.
+ */
+
 import { useState, useRef, useEffect } from 'react'
 import { X } from 'lucide-react'
 import html2canvas from 'html2canvas'

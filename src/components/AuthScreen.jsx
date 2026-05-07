@@ -1,3 +1,21 @@
+/**
+ * AuthScreen.jsx — Sign-in / account creation screen
+ *
+ * Shown when Firebase auth is enabled and no user is currently signed in.
+ * On successful auth, onAuthStateChanged in App.jsx fires automatically —
+ * no explicit callback needed here.
+ *
+ * Modes (toggled via the two-button tab strip):
+ *   SIGN IN        — email + password
+ *   CREATE ACCOUNT — email + password + optional display name
+ *
+ * Also supports Facebook OAuth via a popup flow (requires the Facebook
+ * provider to be enabled in Firebase console and a configured Facebook App).
+ *
+ * Firebase error codes are mapped to plain-English messages via friendlyError()
+ * so users never see raw SDK strings like "auth/wrong-password".
+ */
+
 import { useState } from 'react'
 import { signInEmail, signUpEmail, signInFacebook } from '../lib/auth.js'
 

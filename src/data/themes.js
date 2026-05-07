@@ -1,3 +1,19 @@
+/**
+ * themes.js — Curated habit library
+ *
+ * Defines the 18 built-in habits grouped into 4 life areas.
+ * Each goal object is immutable template data — when a user selects a goal
+ * it is cloned into their personal goals array (stored via db.js) so
+ * per-user fields like `target`, `avoid`, and `shieldUsed` can be patched
+ * without affecting the shared template.
+ *
+ * To add a new habit: append to the relevant theme's `goals` array.
+ * Keep `id` values lowercase, hyphen-free, and globally unique.
+ *
+ * POPULAR lists the 6 habit IDs shown on the "Popular" fast-pick path
+ * in the onboarding flow.
+ */
+
 export const THEMES = [
   {
     id: 'health',

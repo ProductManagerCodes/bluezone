@@ -1,3 +1,24 @@
+/**
+ * Friends.jsx — Social tab: leaderboard and group challenges
+ *
+ * Leaderboard
+ *   Reads all 'leaderboard:*' entries from sharedStorage (published by
+ *   App.jsx's publishLeaderboard effect whenever goals or history change).
+ *   Sorted by totalStreak descending. The current user's row is highlighted.
+ *   A manual refresh button re-reads storage in case another tab updated it.
+ *
+ * Challenges
+ *   Lists active (non-expired) challenges from sharedStorage 'challenge:*'.
+ *   Users can JOIN a challenge (adds their userId to participants[]).
+ *   The + NEW button mounts <NewChallenge /> as a sub-screen.
+ *
+ * Note on cross-user data
+ *   All "shared" data currently lives in the same browser's localStorage
+ *   under a 'shared:' prefix. This simulates social features without a
+ *   real backend. In production these would be Firestore collections with
+ *   real-time listeners.
+ */
+
 import { useState, useEffect, useCallback } from 'react'
 import { RefreshCw, Trophy, Users } from 'lucide-react'
 import { listKeys, getItem, setItem } from '../lib/sharedStorage.js'

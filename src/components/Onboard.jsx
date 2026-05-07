@@ -1,3 +1,20 @@
+/**
+ * Onboard.jsx — First-run setup wizard
+ *
+ * A four-phase flow that collects the user's name and up to 5 habits:
+ *
+ *   Phase 1 — Name: free-text input, stored as 'user' in db.js
+ *   Phase 2 — Mode: choose "Popular" (6 pre-selected habits) or "By theme"
+ *   Phase 3 — Themes (theme mode only): multi-select life areas to filter by
+ *   Phase 4 — Goals: pick up to 5 habits from the filtered list
+ *             Optionally use the AI "✦ SUGGEST HABITS FOR ME" feature (Groq)
+ *             which accepts a plain-English description and pre-selects
+ *             matching habits from the available list.
+ *
+ * On completion, writes 'user' and 'goals' to db.js and calls onComplete()
+ * so App.jsx can transition to the main tab UI.
+ */
+
 import { useState } from 'react'
 import { THEMES, POPULAR } from '../data/themes.js'
 import { setItem } from '../lib/db.js'

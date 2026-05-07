@@ -1,3 +1,20 @@
+/**
+ * App.jsx — Root component and application shell
+ *
+ * Responsibilities:
+ *  - Firebase auth lifecycle: subscribes to onAuthChange on mount, calls
+ *    initUserStore / clearUserStore so all downstream db.js reads are
+ *    automatically scoped to the signed-in user's UID.
+ *  - Render gating: shows a blank loading state → AuthScreen (if Firebase
+ *    enabled and no user) → Onboard (first run) → main three-tab UI.
+ *  - Owns the canonical `goals` array in React state and provides
+ *    `patchGoal` / `updateGoals` callbacks to child screens.
+ *  - Publishes an anonymised leaderboard entry to sharedStorage whenever
+ *    goals or history change, so the Friends tab stays up to date.
+ *  - Renders the global sticky header (brand, date, user name, sign-out)
+ *    and the fixed bottom chrome (footer text + tab navigation).
+ */
+
 import { useState, useEffect } from 'react'
 import { getItem, setItem, initUserStore, clearUserStore } from './lib/db.js'
 import { setItem as sharedSet } from './lib/sharedStorage.js'
